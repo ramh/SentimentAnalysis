@@ -44,4 +44,12 @@ public class TweetFileParser {
 		} catch (IOException e) { e.printStackTrace();} 
 		return result;
 	}
+	
+	public static void main(String[] args) {
+		ArrayList<Tweet> tweets = TweetFileParser.parseFile("D:\\homework\\nlp\\SentimentAnalysis\\src\\data\\train.40000.2009.05.25");
+		for(int i=19980;i<20020;i++)
+		{
+			System.out.println(tweets.get(i));
+		}
+	}
 }

@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,8 +18,8 @@ public class ContextualFeatureExtractor {
 	private static final int NUMBASEATTR = 2;
 	private static final int[] HOURCATEGORY = {3,3,3,3,0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3};
 	private static final String[] TIMENAME = {"Morning","Afternoon","Evening","Night"};
-	private static final int MINEMOTCOUNT = 4;
-	Instances extractFeatures(List<Tweet> tweets)
+	private static final int MINEMOTCOUNT = 100;
+	public static Instances extractFeatures(List<Tweet> tweets)
 	{
 		FastVector attrs = new FastVector();
 		// Determine attributes
@@ -45,9 +44,13 @@ public class ContextualFeatureExtractor {
 			while (emotmat.find())
 			{
 				String curemot = emotmat.group();
-				int curcount = emots.get(curemot);
-				curcount++;
-				emots.put(curemot, curcount);
+				if(emots.containsKey(curemot)) {
+					int curcount = emots.get(curemot);
+					curcount++;
+					emots.put(curemot, curcount);
+				}
+				else
+					emots.put(curemot, 1);
 			}
 		}
 		Set<Map.Entry<String,Integer>> emotset = emots.entrySet();
@@ -68,17 +71,17 @@ public class ContextualFeatureExtractor {
 		}
 		
 		Instances feats = new Instances("Contextual Features", attrs, tweets.size());
-		feats.setClass(sentclass);
+		feats.setClassIndex(0);
 		// Record features
 		
 		for(Tweet t: tweets)
 		{
 			Instance inst = new Instance(attrs.size());
-			inst.setClassValue(t.sentiment);
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(t.time);
-			int hour = cal.get(Calendar.HOUR_OF_DAY);
-			int hrcat = HOURCATEGORY[hour];
+			inst.setDataset(feats);
+			
+			inst.setValue(sentclass, t.sentiment);
+
+			int hrcat = HOURCATEGORY[t.hour];
 			inst.setValue(timeofday, TIMENAME[hrcat]);
 			
 			Matcher emotmat = emotpat.matcher(t.text);
@@ -88,18 +91,23 @@ public class ContextualFeatureExtractor {
 				if(emotslist.contains(curemot))
 				{
 					int attrind = emotslist.indexOf(curemot)+NUMBASEATTR;
-					double val = inst.value(attrind);
-					val += 1.0;
-					inst.setValue(attrind, val);
+					//double val = inst.value(attrind);
+					//val += 1.0;
+					inst.setValue(attrind, 1.0);
 				}
 			}			
 			
-			
-			inst.setDataset(feats);
 			feats.add(inst);
 		}
 		
 		
 		return feats;
+	}
+	
+	public static void main(String[] args) {
+		ArrayList<Tweet> tweets = TweetFileParser.parseFile("D:\\homework\\nlp\\SentimentAnalysis\\src\\data\\train.40000.2009.05.25");
+		Instances insts = ContextualFeatureExtractor.extractFeatures(tweets);
+		System.out.println(insts.toSummaryString());
+		//System.out.println(insts.toString());
 	}
 }
