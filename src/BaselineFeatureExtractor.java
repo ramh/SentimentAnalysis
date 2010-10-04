@@ -13,11 +13,15 @@ import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
 
-public class BaselineFeatureExtractor {	
-	static Instances extractFeatures(List<Tweet> tweets)
+public class BaselineFeatureExtractor implements FeatureExtractor {	
+	private FastVector attrs;
+	private FastVector frequent_words;
+	
+	
+	private void setupAttributes(List<Tweet> tweets)
 	{
 		
-		FastVector attrs = new FastVector();
+		attrs = new FastVector();
 		// Determine attributes
 		
 		FastVector sentvals = new FastVector();
@@ -25,13 +29,18 @@ public class BaselineFeatureExtractor {
 		Attribute sentclass = new Attribute("Sentiment", sentvals);
 		attrs.addElement(sentclass);
 		
-		FastVector frequent_words;
 		frequent_words = get_frequent_words(tweets);
 		Attribute freq_words = new Attribute("FrequentWords", frequent_words);
 		attrs.addElement(freq_words);
+	}
+		
+	public Instances extractFeatures(List<Tweet> tweets)
+	{
+		if(attrs == null)
+			setupAttributes(tweets);
 		
 		Instances feats = new Instances("Baseline Features", attrs, tweets.size());
-		feats.setClass(sentclass);
+		feats.setClassIndex(0);
 		// Record features
 		
 		StringTokenizer st;

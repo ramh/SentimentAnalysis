@@ -14,14 +14,19 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 
-public class ContextualFeatureExtractor {
+public class ContextualFeatureExtractor implements FeatureExtractor{
 	private static final int NUMBASEATTR = 2;
 	private static final int[] HOURCATEGORY = {3,3,3,3,0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3};
 	private static final String[] TIMENAME = {"Morning","Afternoon","Evening","Night"};
 	private static final int MINEMOTCOUNT = 100;
-	public static Instances extractFeatures(List<Tweet> tweets)
+	
+	private FastVector attrs;
+	private Pattern emotpat;
+	private ArrayList<String> emotslist;
+	
+	public void setupAttributes(List<Tweet> tweets)
 	{
-		FastVector attrs = new FastVector();
+		attrs = new FastVector();
 		// Determine attributes
 		
 		FastVector sentvals = new FastVector();
@@ -36,7 +41,7 @@ public class ContextualFeatureExtractor {
 		attrs.addElement(timeofday);
 		
 		// Find frequent emoticons
-		Pattern emotpat = Pattern.compile("\\p{Graph}*\\p{Punct}\\p{Graph}*");
+		emotpat = Pattern.compile("\\p{Graph}*\\p{Punct}\\p{Graph}*");
 		HashMap<String,Integer> emots = new HashMap<String,Integer>(100);
 		for(Tweet t: tweets)
 		{
@@ -62,14 +67,19 @@ public class ContextualFeatureExtractor {
 		}
 		Set<String> goodemots = emots.keySet();
 		goodemots.removeAll(emotrem);
-		ArrayList<String> emotslist = new ArrayList<String>();
+		emotslist = new ArrayList<String>();
 		for(String emot : goodemots)
 		{
 			Attribute attr = new Attribute(emot);
 			attrs.addElement(attr);
 			emotslist.add(emot);
 		}
-		
+	}
+
+	public Instances extractFeatures(List<Tweet> tweets)
+	{
+		if(attrs == null)
+			setupAttributes(tweets);
 		Instances feats = new Instances("Contextual Features", attrs, tweets.size());
 		feats.setClassIndex(0);
 		// Record features
@@ -79,10 +89,10 @@ public class ContextualFeatureExtractor {
 			Instance inst = new Instance(attrs.size());
 			inst.setDataset(feats);
 			
-			inst.setValue(sentclass, t.sentiment);
+			inst.setValue(0, t.sentiment);
 
 			int hrcat = HOURCATEGORY[t.hour];
-			inst.setValue(timeofday, TIMENAME[hrcat]);
+			inst.setValue(1, TIMENAME[hrcat]);
 			
 			Matcher emotmat = emotpat.matcher(t.text);
 			while (emotmat.find())
@@ -106,7 +116,8 @@ public class ContextualFeatureExtractor {
 	
 	public static void main(String[] args) {
 		ArrayList<Tweet> tweets = TweetFileParser.parseFile("D:\\homework\\nlp\\SentimentAnalysis\\src\\data\\train.40000.2009.05.25");
-		Instances insts = ContextualFeatureExtractor.extractFeatures(tweets);
+		ContextualFeatureExtractor cfe = new ContextualFeatureExtractor();
+		Instances insts = cfe.extractFeatures(tweets);
 		System.out.println(insts.toSummaryString());
 		//System.out.println(insts.toString());
 	}

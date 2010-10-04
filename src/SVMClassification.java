@@ -6,15 +6,17 @@ import weka.core.Instances;
 
 
 public class SVMClassification {
-	
+	private FeatureExtractor featexts[] = new FeatureExtractor[4];
 	private SMO classifiers[] = new SMO[4];
 	private Instances insts[] = new Instances[4];
 	
 	public void train(String fileloc) {
 		ArrayList<Tweet> tweets = TweetFileParser.parseFile(fileloc);
+		featexts[0] = new BaselineFeatureExtractor();
+		featexts[2] = new ContextualFeatureExtractor();
 		
 		
-		insts[2] = ContextualFeatureExtractor.extractFeatures(tweets);
+		insts[2] = featexts[2].extractFeatures(tweets);
 		classifiers[2] = new SMO();
 		classifiers[2].setNumFolds(10);
 		try {
@@ -28,7 +30,7 @@ public class SVMClassification {
 	public void test(String fileloc)
 	{
 		ArrayList<Tweet> tweets = TweetFileParser.parseFile(fileloc);
-		Instances tests = ContextualFeatureExtractor.extractFeatures(tweets);
+		Instances tests = featexts[2].extractFeatures(tweets);
 		
 		for(int i=0;i<tests.numInstances();i++) {
 			try {
