@@ -18,8 +18,9 @@ public class SVMClassification {
 		
 		insts[2] = featexts[2].extractFeatures(tweets);
 		classifiers[2] = new SMO();
-		classifiers[2].setNumFolds(10);
+		String[] opts = {"-C 1.0", "-L 0.0010", "-P 1.0E-12", "-N 0", "-V -1", "-W 1", "-K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\""};
 		try {
+			classifiers[2].setOptions(opts);
 			classifiers[2].buildClassifier(insts[2]);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
