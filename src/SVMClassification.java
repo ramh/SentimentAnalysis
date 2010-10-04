@@ -49,8 +49,8 @@ public class SVMClassification {
 	 */
 	public static void main(String[] args) {
 		SVMClassification svmc = new SVMClassification();
-		svmc.train("D:\\homework\\nlp\\SentimentAnalysis\\src\\data\\train.40000.2009.05.25");
-		svmc.test("D:\\homework\\nlp\\SentimentAnalysis\\src\\data\\testdata.manual.2009.05.25");
+		svmc.train("data/train.40000.2009.05.25");
+		svmc.test("data/testdata.manual.2009.05.25");
 	}
 
 }

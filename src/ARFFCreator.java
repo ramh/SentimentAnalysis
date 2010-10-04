@@ -105,7 +105,7 @@ public class ARFFCreator {
 			buffer.append("{");
 
 			// write the instance values
-			List<IndexValueHolder> indexValues = new LinkedList<IndexValueHolder>();
+/*			List<IndexValueHolder> indexValues = new LinkedList<IndexValueHolder>();
 			for (Map.Entry<String, Double> entry : wordFrequency.entrySet()) {
 				Integer index = wordId.get(entry.getKey());
 				if (index != null)  
@@ -113,7 +113,7 @@ public class ARFFCreator {
 			}
 			Collections.sort(indexValues);
 			for (IndexValueHolder indexValue : indexValues)
-				buffer.append("" + indexValue.index + " " + indexValue.value + ", ");
+				buffer.append("" + indexValue.index + " " + indexValue.value + ", ");*/
 
 			// writes the category id
 			buffer.append("" + wordId.size() + " " + id + "}\n");
