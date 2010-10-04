@@ -12,7 +12,7 @@ public class SVMClassification {
 	
 	public void train(String fileloc) {
 		ArrayList<Tweet> tweets = TweetFileParser.parseFile(fileloc);
-		featexts[0] = new BaselineFeatureExtractor();
+		//featexts[0] = new BaselineFeatureExtractor();
 		featexts[2] = new ContextualFeatureExtractor();
 		
 		

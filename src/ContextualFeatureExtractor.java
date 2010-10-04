@@ -49,13 +49,15 @@ public class ContextualFeatureExtractor implements FeatureExtractor{
 			while (emotmat.find())
 			{
 				String curemot = emotmat.group();
-				if(emots.containsKey(curemot)) {
-					int curcount = emots.get(curemot);
-					curcount++;
-					emots.put(curemot, curcount);
+				if(curemot.length() > 1 && curemot.length() < 5) {
+					if(emots.containsKey(curemot)) {
+						int curcount = emots.get(curemot);
+						curcount++;
+						emots.put(curemot, curcount);
+					}
+					else
+						emots.put(curemot, 1);
 				}
-				else
-					emots.put(curemot, 1);
 			}
 		}
 		Set<Map.Entry<String,Integer>> emotset = emots.entrySet();
