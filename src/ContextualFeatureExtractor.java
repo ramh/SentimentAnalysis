@@ -1,5 +1,6 @@
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +13,7 @@ import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.converters.ArffSaver;
 
 
 public class ContextualFeatureExtractor implements FeatureExtractor{
@@ -88,7 +90,7 @@ public class ContextualFeatureExtractor implements FeatureExtractor{
 		
 		for(Tweet t: tweets)
 		{
-			Instance inst = new Instance(attrs.size());
+			Instance inst = new Instance(1.0, new double[attrs.size()]);
 			inst.setDataset(feats);
 			
 			inst.setValue(0, t.sentiment);
@@ -107,12 +109,21 @@ public class ContextualFeatureExtractor implements FeatureExtractor{
 					//val += 1.0;
 					inst.setValue(attrind, 1.0);
 				}
+				
 			}			
 			
 			feats.add(inst);
 		}
 		
-		
+		 ArffSaver saver = new ArffSaver();
+		 saver.setInstances(feats);
+		 try {
+			saver.setFile(new File("output/contextual.arff"));
+			saver.writeBatch();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return feats;
 	}
 	

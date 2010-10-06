@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,11 +14,12 @@ import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.converters.ArffSaver;
 
 public class BaselineFeatureExtractor implements FeatureExtractor {	
 	private FastVector attrs;
 	private FastVector frequent_words;
-	
+	private static final int OFFSET = 1;
 	
 	private void setupAttributes(List<Tweet> tweets)
 	{
@@ -30,8 +33,12 @@ public class BaselineFeatureExtractor implements FeatureExtractor {
 		attrs.addElement(sentclass);
 		
 		frequent_words = get_frequent_words(tweets);
-		Attribute freq_words = new Attribute("FrequentWords", frequent_words);
-		attrs.addElement(freq_words);
+		for(int i=0; i<frequent_words.size(); i++)
+		{
+			String word = (String) frequent_words.elementAt(i);
+			Attribute attr = new Attribute(word);
+			attrs.addElement(attr);
+		}
 	}
 		
 	public Instances extractFeatures(List<Tweet> tweets)
@@ -47,17 +54,26 @@ public class BaselineFeatureExtractor implements FeatureExtractor {
 		String word;
 		for(Tweet t: tweets)
 		{
-			
-			Instance inst = new Instance(attrs.size());
-			inst.setClassValue(t.sentiment);
+			Instance inst = new Instance(1.0, new double[attrs.size()]);
+			inst.setDataset(feats);
+			inst.setValue(0, t.sentiment);
 			st = new StringTokenizer(t.text);
 			while(st.hasMoreElements()) {
 				word = (String) st.nextElement();
 				if(frequent_words.contains(word))
-					inst.setValueSparse(frequent_words.indexOf(word), 1);
+					inst.setValue(frequent_words.indexOf(word)+OFFSET, 1);
 			}
-			inst.setDataset(feats);
 			feats.add(inst);
+		}
+		
+		 ArffSaver saver = new ArffSaver();
+		 saver.setInstances(feats);
+		 try {
+			saver.setFile(new File("output/baseline.arff"));
+			saver.writeBatch();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		return feats;
