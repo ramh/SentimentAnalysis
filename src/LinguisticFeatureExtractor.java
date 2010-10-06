@@ -23,9 +23,13 @@ public class LinguisticFeatureExtractor implements FeatureExtractor{
 	private FastVector attrs;
 	private FastVector pos_relations;
 	private static final int OFFSET = 1;
+	private static LexicalizedParser lp;
 
 	private void setupAttributes(List<Tweet> tweets)
 	{
+		lp = new LexicalizedParser("res/englishPCFG.ser.gz");
+		lp.setOptionFlags(new String[]{"-maxLength", "80", "-retainTmpSubcategories"});
+		
 		attrs = new FastVector();
 		// Determine attributes
 		FastVector sentvals = new FastVector();
@@ -59,14 +63,14 @@ public class LinguisticFeatureExtractor implements FeatureExtractor{
 		GrammaticalStructureFactory gsf;
 		GrammaticalStructure gs;
 		Collection tdl;
-		LexicalizedParser lp = new LexicalizedParser("res/englishPCFG.ser.gz");
-		lp.setOptionFlags(new String[]{"-maxLength", "80", "-retainTmpSubcategories"});
+		
 		tlp = new PennTreebankLanguagePack();
 		gsf = tlp.grammaticalStructureFactory();
-
+		
 		for(Tweet t: tweets)
 		{	
 			Instance inst = new Instance(1.0, new double[attrs.size()]);
+			inst.setDataset(feats);
 			inst.setClassValue(t.sentiment);
 
 			st = new StringTokenizer(t.text);
@@ -87,7 +91,6 @@ public class LinguisticFeatureExtractor implements FeatureExtractor{
 					inst.setValue(pos_relations.indexOf(x.reln().toString())+OFFSET, 1);
 			}
 
-			inst.setDataset(feats);
 			feats.add(inst);
 		}
 
@@ -114,8 +117,7 @@ public class LinguisticFeatureExtractor implements FeatureExtractor{
 		GrammaticalStructureFactory gsf;
 		GrammaticalStructure gs;
 		Collection tdl;
-		LexicalizedParser lp = new LexicalizedParser("res/englishPCFG.ser.gz");
-		lp.setOptionFlags(new String[]{"-maxLength", "80", "-retainTmpSubcategories"});
+
 		tlp = new PennTreebankLanguagePack();
 		gsf = tlp.grammaticalStructureFactory();
 		int postags_count = 0;

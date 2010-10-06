@@ -2,3 +2,4 @@
 *.class
 stanford-parser-2010-08-20
 output/*
+bin/
