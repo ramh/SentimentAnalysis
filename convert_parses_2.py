@@ -35,7 +35,7 @@ for line in lines:
         if tag in tagsdict:
             tagsdict[tag] += 1
         else:
-            tagsdict += {tag : 1}
+            tagsdict[tag] = 1
         if not tag in uniqtags:
             uniqtags += [tag]
         # end mod code
@@ -72,7 +72,8 @@ while i < len(nums):
         #print "%d: (no parse)" % (curlinenum + 1) 
         print ""
         curlinenum += 1
-    if nums[i] != nums[i+1]:
+    useind = i
+    if i+1 != len(nums) and nums[i] != nums[i+1]:
         prline = nlines[i]
     else:
         j = i
@@ -83,6 +84,6 @@ while i < len(nums):
         prline = nlines[useind]
         i = j - 1
     #print "%d: %s" % (curlinenum + 1, prline) 
-    print ",".join(["%s:%d" % (tag, count) for (tag, count) in tagsdicts[useind]])
+    print ",".join(["%s:%d" % (tag, tagsdicts[useind][tag]) for tag in tagsdicts[useind]])
     curlinenum += 1
     i += 1

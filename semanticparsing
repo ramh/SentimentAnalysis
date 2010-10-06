@@ -1,0 +1,6 @@
+#!/bin/bash
+
+filename=$1
+filestem=`echo "$filename" | awk -F/ '{print $NF}' | sed 's/\.[^.][^.]*$//g'`
+scripts/assert $1 > /dev/null
+python convert_parses_2.py $filestem.parses > $filestem.simpparse

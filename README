@@ -1,0 +1,2 @@
+Must move semanticparsing into the ASSERT directory and update the
+ASSERTDIR variable in SemanticFeatureExtractor.java
