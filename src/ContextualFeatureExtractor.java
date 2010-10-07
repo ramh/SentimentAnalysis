@@ -17,7 +17,7 @@ import weka.core.converters.ArffSaver;
 
 
 public class ContextualFeatureExtractor implements FeatureExtractor{
-	private static final int NUMBASEATTR = 2;
+	private static final int NUMBASEATTR = 1;
 	private static final int[] HOURCATEGORY = {3,3,3,3,0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3};
 	private static final String[] TIMENAME = {"Morning","Afternoon","Evening","Night"};
 	private static final int MINEMOTCOUNT = 100;
@@ -30,11 +30,6 @@ public class ContextualFeatureExtractor implements FeatureExtractor{
 	{
 		attrs = new FastVector();
 		// Determine attributes
-		
-		FastVector sentvals = new FastVector();
-		sentvals.addElement("Negative"); sentvals.addElement("Neutral"); sentvals.addElement("Positive"); 
-		Attribute sentclass = new Attribute("Sentiment", sentvals);
-		attrs.addElement(sentclass);
 		
 		FastVector hourvals = new FastVector();
 		hourvals.addElement(TIMENAME[0]); hourvals.addElement(TIMENAME[1]);
@@ -74,7 +69,7 @@ public class ContextualFeatureExtractor implements FeatureExtractor{
 		emotslist = new ArrayList<String>();
 		for(String emot : goodemots)
 		{
-			Attribute attr = new Attribute(emot);
+			Attribute attr = new Attribute("confeature:" + emot);
 			attrs.addElement(attr);
 			emotslist.add(emot);
 		}
@@ -92,11 +87,9 @@ public class ContextualFeatureExtractor implements FeatureExtractor{
 		{
 			Instance inst = new Instance(1.0, new double[attrs.size()]);
 			inst.setDataset(feats);
-			
-			inst.setValue(0, t.sentiment);
 
 			int hrcat = HOURCATEGORY[t.hour];
-			inst.setValue(1, TIMENAME[hrcat]);
+			inst.setValue(0, TIMENAME[hrcat]);
 			
 			Matcher emotmat = emotpat.matcher(t.text);
 			while (emotmat.find())
@@ -128,10 +121,9 @@ public class ContextualFeatureExtractor implements FeatureExtractor{
 	}
 	
 	public static void main(String[] args) {
-		ArrayList<Tweet> tweets = TweetFileParser.parseFile("D:\\homework\\nlp\\SentimentAnalysis\\src\\data\\train.40000.2009.05.25");
+		ArrayList<Tweet> tweets = TweetFileParser.parseFile("data/train.40000.2009.05.25");
 		ContextualFeatureExtractor cfe = new ContextualFeatureExtractor();
 		Instances insts = cfe.extractFeatures(tweets);
 		System.out.println(insts.toSummaryString());
-		//System.out.println(insts.toString());
 	}
 }
