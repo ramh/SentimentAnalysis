@@ -28,16 +28,12 @@ public class LinguisticFeatureExtractor implements FeatureExtractor{
 	{
 		attrs = new FastVector();
 		// Determine attributes
-		FastVector sentvals = new FastVector();
-		sentvals.addElement("Negative"); sentvals.addElement("Neutral"); sentvals.addElement("Positive"); 
-		Attribute sentclass = new Attribute("Sentiment", sentvals);
-		attrs.addElement(sentclass);
 
 		pos_relations = get_all_pos_relations(tweets);
 		for(int i=0; i<pos_relations.size(); i++)
 		{
 			String word = (String) pos_relations.elementAt(i);
-			Attribute attr = new Attribute(word);
+			Attribute attr = new Attribute("lingfeature:" + word);
 			attrs.addElement(attr);
 		}
 	}
@@ -67,7 +63,6 @@ public class LinguisticFeatureExtractor implements FeatureExtractor{
 		for(Tweet t: tweets)
 		{	
 			Instance inst = new Instance(1.0, new double[attrs.size()]);
-			inst.setClassValue(t.sentiment);
 
 			st = new StringTokenizer(t.text);
 			words = new ArrayList<String>();

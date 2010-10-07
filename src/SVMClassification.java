@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Random;
 
 import weka.classifiers.functions.SMO;
 import weka.core.Attribute;
@@ -6,85 +7,85 @@ import weka.core.Instances;
 
 public class SVMClassification {
 	private FeatureExtractor featexts[] = {new BaselineFeatureExtractor(),
+										   new LinguisticFeatureExtractor(),
 										   new ContextualFeatureExtractor()};
-	private SMO classifiers[] = new SMO[featexts.length];
-	private Instances insts[] = new Instances[featexts.length];
+	//private SMO classifiers[] = new SMO[featexts.length];
+	private Instances traininsts[] = new Instances[featexts.length];
+	private Instances testinsts[] = new Instances[featexts.length];
 	
-	public void train(String fileloc) {
-		ArrayList<Tweet> tweets = TweetFileParser.parseFile(fileloc);
+	public SVMClassification(String trainfile, String testfile) {
+		ArrayList<Tweet> traintweets = TweetFileParser.parseFile(trainfile);
+		ArrayList<Tweet> testtweets = TweetFileParser.parseFile(testfile);
 		
-		/* Full actual code
 		for(int i=0;i<featexts.length;i++) {
-			insts[i] = featexts[i].extractFeatures(tweets);
-			if(i > 0)
-				insts[i] = Instances.mergeInstances(insts[i], insts[i-1]);
-			classifiers[i] = new SMO();
+			traininsts[i] = featexts[i].extractFeatures(traintweets);
+			if(i > 0) {
+				traininsts[i] = Instances.mergeInstances(traininsts[i], traininsts[i-1]);
+			}
+			testinsts[i] = featexts[i].extractFeatures(testtweets);
+			if(i > 0) {
+				testinsts[i] = Instances.mergeInstances(testinsts[i], testinsts[i-1]);
+			}
+		}
+	}
+		
+	public void crossValidation(int numfolds) {
+
+		for(int i=0;i<featexts.length;i++) {
+			Random rand = new Random(8);
+			Instances randData = new Instances(traininsts[i]);
+			randData.randomize(rand);
+			randData.stratify(10);
+			
+			for(int n = 0; n < 10; n++) {
+				Instances train = randData.trainCV(numfolds, n);
+				Instances test = randData.testCV(numfolds, n);
+
+				SMO classifier = new SMO();
+				String[] opts = {"-C 1.0", "-L 0.0010", "-P 1.0E-12", "-N 0", "-V -1", "-W 1", "-K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\""};
+				try {
+					classifier.setOptions(opts);
+					classifier.buildClassifier(train);
+					System.out.println("***************************************");
+					System.out.println("Cross Validation " + n + ":");
+					testAndReport(classifier, test);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}			
+			}
+		}
+	}
+		
+	public void testValidation() {
+
+		for(int i=0;i<featexts.length;i++) {
+			Instances train = traininsts[i];
+			Instances test = testinsts[i];
+			SMO classifier = new SMO();
 			String[] opts = {"-C 1.0", "-L 0.0010", "-P 1.0E-12", "-N 0", "-V -1", "-W 1", "-K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\""};
 			try {
-				classifiers[i].setOptions(opts);
-				classifiers[i].buildClassifier(insts[i]);
+				classifier.setOptions(opts);
+				classifier.buildClassifier(train);
+				System.out.println("***************************************");
+				System.out.println("Test Validation:");
+				testAndReport(classifier, test);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}			
 		}
-		*/
-		
-		// Testing code:
-		//featexts[0] = new BaselineFeatureExtractor();
-		featexts[2] = new ContextualFeatureExtractor();
-		//featexts[2] = new BaselineFeatureExtractor();
-		//featexts[2] = new LinguisticFeatureExtractor();
-
-		insts[2] = featexts[2].extractFeatures(tweets);
-		classifiers[2] = new SMO();
-		// String[] opts = {"-C 1.0", "-L 0.0010", "-P 1.0E-12", "-N 0",
-		// "-V -1", "-W 1",
-		// "-K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\""};
-		//String[] opts = { "-C 1.0", "-L 0.0010", "-P 1.0E-12", "-N 0", "-V -1",
-		//		"-W 1"};
-		//		"-K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\"" };
-		try {
-			//classifiers[2].setOptions(opts);
-			classifiers[2].buildClassifier(insts[2]);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
-
-	public void test(String fileloc) {
-		ArrayList<Tweet> tweets = TweetFileParser.parseFile(fileloc);
-		
-		/* Full actual code
-		for(int i=0;i<featexts.length;i++) {
-			insts[i] = featexts[i].extractFeatures(tweets);
-			if(i > 0)
-				insts[i] = Instances.mergeInstances(insts[i], insts[i-1]);
-			for(int j=0;j<tests.numInstances();j++) {
-				try {
-					double cld = classifiers[i].classifyInstance(tests.instance(j));
-					Attribute attr = tests.attribute(0);
-					String cl = attr.value((int) cld);
-					System.out.println(cl);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}
-		}
-		*/
-		
-		Instances tests = featexts[2].extractFeatures(tweets);
+	
+	public void testAndReport(SMO classifier, Instances test) {
 		int accuracy = 0;
 		int nonneutral = 0;
-		for (int i = 0; i < tests.numInstances(); i++) {
+		for (int i = 0; i < test.numInstances(); i++) {
 			try {
-				double cld = classifiers[2].classifyInstance(tests.instance(i));
-				Attribute attr = tests.attribute(0);
+				double cld = classifier.classifyInstance(test.instance(i));
+				Attribute attr = test.attribute(0);
 				String cl = attr.value((int) cld);
-				double actd = tests.instance(i).value(0);
+				double actd = test.instance(i).value(0);
 				String act = attr.value((int) actd);
 
 				if(!act.equals("Neutral")) {
@@ -99,10 +100,10 @@ public class SVMClassification {
 				e.printStackTrace();
 			}	
 		}
-		System.out.println(tests.numInstances());
-		System.out.println(nonneutral);
-		System.out.println(accuracy);
+		System.out.println("Number of test instances: " + test.numInstances());
+		System.out.println("Nonneutral: " + nonneutral);
 		System.out.println("Accuracy:");
+		System.out.println(accuracy + " // " + nonneutral);
 		System.out.println(accuracy / (double)nonneutral);
 	}
 
@@ -110,9 +111,10 @@ public class SVMClassification {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		SVMClassification svmc = new SVMClassification();
-		svmc.train("data/train.40000.2009.05.25");
-		svmc.test("data/testdata.manual.2009.05.25");
+		SVMClassification svmc = new SVMClassification("data/train.40000.2009.05.25",
+				                                       "data/testdata.manual.2009.05.25");
+		svmc.crossValidation(10);
+		svmc.testValidation();
 	}
 
 }

@@ -36,7 +36,7 @@ public class BaselineFeatureExtractor implements FeatureExtractor {
 		for(int i=0; i<frequent_words.size(); i++)
 		{
 			String word = (String) frequent_words.elementAt(i);
-			Attribute attr = new Attribute(word);
+			Attribute attr = new Attribute("basefeature:" + word);
 			attrs.addElement(attr);
 		}
 	}
@@ -66,7 +66,7 @@ public class BaselineFeatureExtractor implements FeatureExtractor {
 			feats.add(inst);
 		}
 		
-		 ArffSaver saver = new ArffSaver();
+		 /*ArffSaver saver = new ArffSaver();
 		 saver.setInstances(feats);
 		 try {
 			saver.setFile(new File("output/baseline.arff"));
@@ -74,7 +74,7 @@ public class BaselineFeatureExtractor implements FeatureExtractor {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 		
 		return feats;
 	}

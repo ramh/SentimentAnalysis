@@ -22,7 +22,7 @@ public class SemanticFeatureExtractor implements FeatureExtractor{
 	private FastVector attrs;
 	private ArrayList<String> tagslist;
 	
-	public void setupAttributes(String[] tags)
+	public void setupAttributes(List<String> tags)
 	{
 		attrs = new FastVector();
 		// Determine attributes
@@ -45,16 +45,26 @@ public class SemanticFeatureExtractor implements FeatureExtractor{
 	{
 		try {
 			PrintWriter out;
-			out = new PrintWriter(new BufferedWriter(new FileWriter("twitterlines.lines")));
-			for(Tweet t : tweets)
-				out.println(t.text);
-			out.close();
+			for(int fnum = 0;fnum < tweets.size(); fnum+=100) {
+				out = new PrintWriter(new BufferedWriter(new FileWriter("twitterlines" + fnum/100)));
+				for(int i=0;i<100 && fnum + i < tweets.size();i++) {
+					Tweet t = tweets.get(fnum + i);
+					String text = t.text;
+					text = text.replaceAll("\\@\\p{Graph}*", "");
+					text = text.replaceAll("\\p{Graph}*\\d\\p{Graph}*", "");
+					text = text.replaceAll("\\p{Punct}", "");
+					text = text.replaceAll("\\s+", " ");
+					text = text.trim();
+					out.println(text);
+				}
+				out.close();
+			}
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			System.exit(-1);
 		}
-
+/*
 		String[] cmd = {"." + ASSERTDIR + "/semanticparsing", "twitterlines.lines"};
 		try {
 			Process p = Runtime.getRuntime().exec(cmd);
@@ -68,55 +78,100 @@ public class SemanticFeatureExtractor implements FeatureExtractor{
 			e.printStackTrace();
 			System.exit(-1);
 		}
+*/
 		
-		try {
-			BufferedReader in = new BufferedReader(new FileReader("twitterlines.simpparse"));
+			ArrayList<String> tags = new ArrayList<String>();
+			for(int fnum = 0;fnum < tweets.size(); fnum+=100) {
+				boolean filenotfound = false;
+				BufferedReader in = null;
+				try {
+					in = new BufferedReader(new FileReader("twitterlines" + fnum/100 + ".simpparse"));
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+				for(int i=0;i<100 && fnum + i < tweets.size();i++) {
+					String firstline = null;
+					try {
+						firstline = in.readLine();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if(firstline.length() == 0) {
+						filenotfound = true;
+						continue;
+					}
+					else {
+						String[] tagsplit = firstline.split(",");
+						for(String tag : tagsplit) {
+							if(!tags.contains(tag))
+								tags.add(tag);
+						}
+					}
+				}
+			}
 			if(attrs == null)
-				setupAttributes(in.readLine().split(","));
-			else
-				in.readLine();
+				setupAttributes(tags);
 			
 			Instances feats = new Instances("Contextual Features", attrs, tweets.size());
 			
-			for(Tweet t: tweets)
-			{
-				Instance inst = new Instance(1.0, new double[attrs.size()]);
-				inst.setDataset(feats);
-				
-				inst.setValue(0, t.sentiment);
-				
-				String[] counts = in.readLine().split(",");
-				
-				for(String count : counts)
-				{
-					String[] countsplit = count.split(":");
-					String tag = countsplit[0];
-					int freq = Integer.parseInt(countsplit[1]);
-					if(tagslist.contains(tag))
-					{
-						int attrind = tagslist.indexOf(tag)+NUMBASEATTR;
-						inst.setValue(attrind, (double) freq);
+			try {
+				for(int fnum = 0;fnum < tweets.size(); fnum+=100) {
+					boolean emptyfile = false;
+					BufferedReader in = null;
+					try {
+						in = new BufferedReader(new FileReader("twitterlines" + fnum/100 + ".simpparse"));
+					} catch (FileNotFoundException e1) {
+						e1.printStackTrace();
 					}
-					
-				}			
-				
-				feats.add(inst);
+					for(int i=0;i<100 && fnum + i < tweets.size();i++) {
+						Tweet t = tweets.get(i + fnum);
+						String firstline = in.readLine();
+						if(firstline.length() == 0) {
+							emptyfile = true;
+						}
+						
+						Instance inst = new Instance(1.0, new double[attrs.size()]);
+						inst.setDataset(feats);
+
+						inst.setValue(0, t.sentiment);
+
+						if(!emptyfile) {
+							String line = in.readLine();
+							if(line.length() > 0) {
+								String[] counts = line.split(",");
+		
+								for(String count : counts)
+								{
+									String[] countsplit = count.split(":");
+									String tag = countsplit[0];
+									int freq = Integer.parseInt(countsplit[1]);
+									if(tagslist.contains(tag))
+									{
+										int attrind = tagslist.indexOf(tag)+NUMBASEATTR;
+										inst.setValue(attrind, (double) freq);
+									}
+		
+								}			
+		
+								feats.add(inst);
+							}
+						}
+					}
+				}
+				return feats;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.exit(-1);
 			}
-			
-			return feats;
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			System.exit(-1);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.exit(-1);
-		}
 		return null;
 	}
 	
 	public static void main(String[] args) {
+        ArrayList<Tweet> tweets = TweetFileParser.parseFile("data/train.40000.2009.05.25");
+        SemanticFeatureExtractor sfe = new SemanticFeatureExtractor();
+        sfe.extractFeatures(tweets);
 	}
 }
 
